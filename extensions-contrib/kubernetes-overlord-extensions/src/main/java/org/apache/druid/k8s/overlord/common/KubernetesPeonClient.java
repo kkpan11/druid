@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import org.apache.druid.error.DruidException;
 import org.apache.druid.indexing.common.task.IndexTaskUtils;
 import org.apache.druid.indexing.common.task.Task;
 import org.apache.druid.java.util.common.RetryUtils;
@@ -61,7 +62,7 @@ public class KubernetesPeonClient
     this.emitter = emitter;
   }
 
-  public Pod launchPeonJobAndWaitForStart(Job job, Task task, long howLong, TimeUnit timeUnit)
+  public Pod launchPeonJobAndWaitForStart(Job job, Task task, long howLong, TimeUnit timeUnit) throws IllegalStateException
   {
     long start = System.currentTimeMillis();
     // launch job
@@ -74,12 +75,15 @@ public class KubernetesPeonClient
       Pod result = client.pods().inNamespace(namespace).withName(mainPod.getMetadata().getName())
                          .waitUntilCondition(pod -> {
                            if (pod == null) {
-                             return false;
+                             return true;
                            }
                            return pod.getStatus() != null && pod.getStatus().getPodIP() != null;
                          }, howLong, timeUnit);
+      
+      if (result == null) {
+        throw new IllegalStateException("K8s pod for the task [%s] appeared and disappeared. It can happen if the task was canceled");
+      }
       long duration = System.currentTimeMillis() - start;
-      log.info("Took task %s %d ms for pod to startup", jobName, duration);
       emitK8sPodMetrics(task, "k8s/peon/startup/time", duration);
       return result;
     });
@@ -263,7 +267,7 @@ public class KubernetesPeonClient
       );
     }
     catch (Exception e) {
-      throw new KubernetesResourceNotFoundException("K8s pod with label: job-name=" + jobName + " not found");
+      throw DruidException.defensive(e, "Error when looking for K8s pod with label: job-name=%s", jobName);
     }
   }
 

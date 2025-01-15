@@ -26,7 +26,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.runtime.Hook;
-import org.apache.calcite.util.Pair;
 import org.apache.druid.java.util.common.ISE;
 import org.apache.druid.java.util.common.Intervals;
 import org.apache.druid.java.util.common.StringUtils;
@@ -46,16 +45,18 @@ import org.apache.druid.segment.column.ColumnHolder;
 import org.apache.druid.server.QueryLifecycle;
 import org.apache.druid.server.QueryLifecycleFactory;
 import org.apache.druid.server.QueryResponse;
-import org.apache.druid.server.security.Access;
 import org.apache.druid.server.security.AuthenticationResult;
+import org.apache.druid.server.security.AuthorizationResult;
 import org.apache.druid.sql.calcite.planner.PlannerConfig;
 import org.apache.druid.sql.calcite.planner.PlannerContext;
 import org.apache.druid.sql.calcite.rel.CannotBuildQueryException;
 import org.apache.druid.sql.calcite.rel.DruidQuery;
+import org.apache.druid.sql.hook.DruidHook;
 import org.joda.time.Interval;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -64,13 +65,13 @@ public class NativeQueryMaker implements QueryMaker
   private final QueryLifecycleFactory queryLifecycleFactory;
   private final PlannerContext plannerContext;
   private final ObjectMapper jsonMapper;
-  private final List<Pair<Integer, String>> fieldMapping;
+  private final List<Entry<Integer, String>> fieldMapping;
 
   public NativeQueryMaker(
       final QueryLifecycleFactory queryLifecycleFactory,
       final PlannerContext plannerContext,
       final ObjectMapper jsonMapper,
-      final List<Pair<Integer, String>> fieldMapping
+      final List<Entry<Integer, String>> fieldMapping
   )
   {
     this.queryLifecycleFactory = queryLifecycleFactory;
@@ -171,6 +172,7 @@ public class NativeQueryMaker implements QueryMaker
   )
   {
     Hook.QUERY_PLAN.run(query);
+    plannerContext.dispatchHook(DruidHook.NATIVE_PLAN, query);
 
     if (query.getId() == null) {
       final String queryId = UUID.randomUUID().toString();
@@ -183,14 +185,18 @@ public class NativeQueryMaker implements QueryMaker
     query = query.withSqlQueryId(plannerContext.getSqlQueryId());
 
     final AuthenticationResult authenticationResult = plannerContext.getAuthenticationResult();
-    final Access authorizationResult = plannerContext.getAuthorizationResult();
+    final AuthorizationResult authorizationResult = plannerContext.getAuthorizationResult();
     final QueryLifecycle queryLifecycle = queryLifecycleFactory.factorize();
 
     // After calling "runSimple" the query will start running. We need to do this before reading the toolChest, since
     // otherwise it won't yet be initialized. (A bummer, since ideally, we'd verify the toolChest exists and can do
     // array-based results before starting the query; but in practice we don't expect this to happen since we keep
     // tight control over which query types we generate in the SQL layer. They all support array-based results.)
-    final QueryResponse<T> results = queryLifecycle.runSimple((Query<T>) query, authenticationResult, authorizationResult);
+    final QueryResponse<T> results = queryLifecycle.runSimple(
+        (Query<T>) query,
+        authenticationResult,
+        authorizationResult
+    );
 
     return mapResultSequence(
         results,
@@ -257,11 +263,11 @@ public class NativeQueryMaker implements QueryMaker
     );
   }
 
-  private static <T> List<T> mapColumnList(final List<T> in, final List<Pair<Integer, String>> fieldMapping)
+  private static <T> List<T> mapColumnList(final List<T> in, final List<Entry<Integer, String>> fieldMapping)
   {
     final List<T> out = new ArrayList<>(fieldMapping.size());
 
-    for (final Pair<Integer, String> entry : fieldMapping) {
+    for (final Entry<Integer, String> entry : fieldMapping) {
       out.add(in.get(entry.getKey()));
     }
 

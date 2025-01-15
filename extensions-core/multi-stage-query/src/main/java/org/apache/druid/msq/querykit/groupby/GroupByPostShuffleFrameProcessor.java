@@ -109,7 +109,7 @@ public class GroupByPostShuffleFrameProcessor implements FrameProcessor<Object>
             RowBasedGrouperHelper.createResultRowBasedColumnSelectorFactory(
                 query,
                 () -> outputRow,
-                RowSignature.Finalization.YES
+                GroupByQueryKit.isFinalize(query) ? RowSignature.Finalization.YES : RowSignature.Finalization.NO
             )
         );
   }
@@ -174,7 +174,6 @@ public class GroupByPostShuffleFrameProcessor implements FrameProcessor<Object>
 
     while (!frameCursor.isDone()) {
       final ResultRow currentRow = rowSupplierFromFrameCursor.get();
-
       if (outputRow == null) {
         outputRow = currentRow.copy();
       } else if (compareFn.compare(outputRow, currentRow) == 0) {
@@ -322,7 +321,7 @@ public class GroupByPostShuffleFrameProcessor implements FrameProcessor<Object>
 
     virtualColumns.add(partitionBoostVirtualColumn);
     final VirtualColumn segmentGranularityVirtualColumn =
-        QueryKitUtils.makeSegmentGranularityVirtualColumn(jsonMapper, query);
+        QueryKitUtils.makeSegmentGranularityVirtualColumn(jsonMapper, query.context());
     if (segmentGranularityVirtualColumn != null) {
       virtualColumns.add(segmentGranularityVirtualColumn);
     }

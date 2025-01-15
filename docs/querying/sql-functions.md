@@ -156,7 +156,7 @@ Concatenates array inputs into a single array.
 
 **Function type:** [Array](./sql-array-functions.md)
 
-If `expr` is a scalar type, returns 1 if `arr` contains `expr`. If `expr` is an array, returns 1 if `arr` contains all elements of `expr`. Otherwise returns 0.
+If `expr` is a scalar type, returns true if `arr` contains `expr`. If `expr` is an array, returns 1 if `arr` contains all elements of `expr`. Otherwise returns false.
 
 
 ## ARRAY_LENGTH
@@ -204,7 +204,18 @@ Returns the 1-based index of the first occurrence of `expr` in the array. If no 
 
 **Function type:** [Array](./sql-array-functions.md)
 
-Returns 1 if `arr1` and `arr2` have any elements in common, else 0.|
+Returns true if `arr1` and `arr2` have any elements in common, else false.
+
+## SCALAR_IN_ARRAY
+
+`SCALAR_IN_ARRAY(expr, arr)`
+
+**Function type:** [Array](./sql-array-functions.md)
+
+Returns true if the scalar `expr` is present in `arr`. Otherwise, returns false if the scalar `expr` is non-null or
+`UNKNOWN` if the scalar `expr` is `NULL`.
+
+Returns `UNKNOWN` if `arr` is `NULL`.
 
 ## ARRAY_PREPEND
 
@@ -480,6 +491,14 @@ Calculates the trigonometric cotangent of an angle expressed in radians.
 
 Counts the number of rows.
 
+## CUME_DIST
+
+`CUME_DIST()`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the cumulative distribution of the current row within the window calculated as `number of window rows at the same rank or higher than current row` / `total window rows`. The return value ranges between `1/number of rows` and 1.
+
 ## CURRENT_DATE
 
 `CURRENT_DATE`
@@ -529,6 +548,14 @@ Decodes a Base64-encoded string into a UTF-8 encoded string.
 
 Converts an angle from radians to degrees.
 
+## DENSE_RANK
+
+`DENSE_RANK()`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the rank for a row within a window without gaps. For example, if two rows tie for a rank of 1, the subsequent row is ranked 2.
+
 ## DIV
 
 `DIV(x, y)`
@@ -536,6 +563,10 @@ Converts an angle from radians to degrees.
 **Function type:** [Scalar, numeric](sql-scalar.md#numeric-functions)
 
 Returns the result of integer division of `x` by `y`.
+
+:::info
+The `DIV` function is not implemented in Druid versions 30.0.0 or earlier. Consider using [`SAFE_DIVIDE`](./sql-functions.md#safe_divide) instead. 
+:::
 
 ## DS_CDF
 
@@ -684,6 +715,14 @@ Calculates _e_ raised to the power of the numeric expression.
 
 Extracts the value of some unit of the timestamp, optionally from a certain time zone, and returns the number.
 
+## FIRST_VALUE
+
+`FIRST_VALUE(expr)`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the value evaluated for the expression for the first row within the window.
+
 ## FLOOR (date and time)
 
 `FLOOR(<TIMESTAMP> TO <TIME_UNIT>)`
@@ -820,6 +859,13 @@ Returns true if the IPv6 `address` belongs to the `subnet` literal, else false.
 
 Returns an array of field names from `expr` at the specified `path`.
 
+## JSON_MERGE
+
+**Function type:** [JSON](sql-json-functions.md)
+
+`JSON_MERGE(expr1, expr2[, expr3 ...])`
+Merges two or more JSON `STRING` or `COMPLEX<json>` into one. Preserves the rightmost value when there are key overlaps. Returning always a `COMPLEX<json>` type.
+
 ## JSON_OBJECT
 
 **Function type:** [JSON](sql-json-functions.md)
@@ -860,6 +906,22 @@ Extracts an `ARRAY<COMPLEX<json>>` value from `expr` at the specified `path`. If
 
 Extracts a literal value from `expr` at the specified `path`. If you specify `RETURNING` and an SQL type name (such as `VARCHAR`, `BIGINT`, `DOUBLE`, etc) the function plans the query using the suggested type. Otherwise, it attempts to infer the type based on the context. If it can't infer the type, it defaults to `VARCHAR`.
 
+## LAG
+
+`LAG(expr[, offset])`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+If you do not supply an `offset`, returns the value evaluated at the row preceding the current row. Specify an offset number `n` to return the value evaluated at `n` rows preceding the current one.
+
+## LAST_VALUE
+
+`LAST_VALUE(expr)`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the value evaluated for the expression for the last row within the window.
+
 ## LATEST
 
 `LATEST(expr, [maxBytesPerValue])`
@@ -875,6 +937,14 @@ Returns the value of a numeric or string expression corresponding to the latest 
 **Function type:** [Aggregation](sql-aggregations.md)
 
 Returns the value of a numeric or string expression corresponding to the latest time value from `timestampExpr`.
+
+## LEAD
+
+`LEAD(expr[, offset])`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+If you do not supply an `offset`, returns the value evaluated at the row following the current row. Specify an offset number `n` to return the value evaluated at `n` rows following the current one; if there is no such row, returns the given default value.
 
 ## LEAST
 
@@ -1084,6 +1154,14 @@ Adds the expression to the beginning of the array.
 
 Returns a slice of the array from the zero-based start and end indexes.
 
+## MV_TO_ARRAY
+
+`MV_TO_ARRAY(str)`
+
+**Function type:** [Multi-value string](sql-multivalue-string-functions.md)
+
+Converts a multi-value string from a `VARCHAR` to a `VARCHAR ARRAY`.
+
 ## MV_TO_STRING
 
 `MV_TO_STRING(arr, str)`
@@ -1091,6 +1169,14 @@ Returns a slice of the array from the zero-based start and end indexes.
 **Function type:** [Multi-value string](sql-multivalue-string-functions.md)
 
 Joins all elements of the array together by the given delimiter.
+
+## NTILE
+
+`NTILE(tiles)`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Divides the rows within a window as evenly as possible into the number of tiles, also called buckets, and returns the value of the tile that the row falls into.
 
 ## NULLIF
 
@@ -1124,6 +1210,14 @@ Parses `expr` into a `COMPLEX<json>` object. This operator deserializes JSON val
 
 Converts a string into a BIGINT with the given base or into a DECIMAL data type if the base is not specified.
 
+## PERCENT_RANK
+
+`PERCENT_RANK()`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the relative rank of the row calculated as a percentage according to the formula: `RANK() OVER (window) / COUNT(1) OVER (window)`.
+
 ## POSITION
 
 `POSITION(<CHARACTER> IN <CHARACTER> [FROM <INTEGER>])`
@@ -1147,6 +1241,14 @@ Calculates a numerical expression raised to the specified power.
 **Function type:** [Scalar, numeric](sql-scalar.md#numeric-functions)
 
 Converts an angle from degrees to radians.
+
+## RANK
+
+`RANK()`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the rank with gaps for a row within a window. For example, if two rows tie for rank 1, the next rank is 3.
 
 ## REGEXP_EXTRACT
 
@@ -1212,6 +1314,14 @@ Returns the rightmost number of characters from an expression.
 **Function type:** [Scalar, numeric](sql-scalar.md#numeric-functions)
 
 Calculates the rounded value for a numerical expression.
+
+## ROW_NUMBER
+
+`ROW_NUMBER()`
+
+**Function type:** [Window](sql-window-functions.md#window-function-reference)
+
+Returns the number of the row within the window starting from 1.
 
 ## RPAD
 
@@ -1583,4 +1693,3 @@ Calculates the sample variance of a set of values.
 **Function type:** [Aggregation](sql-aggregations.md)
 
 Alias for [`VAR_SAMP`](#var_samp).
-

@@ -154,7 +154,8 @@ public class CompressedFloatsSerdeTest
           segmentWriteOutMedium,
           "test",
           order,
-          compressionStrategy
+          compressionStrategy,
+          segmentWriteOutMedium.getCloser()
       );
       serializer.open();
 
@@ -167,12 +168,14 @@ public class CompressedFloatsSerdeTest
 
   public void testWithValues(float[] values) throws Exception
   {
+    SegmentWriteOutMedium segmentWriteOutMedium = new OffHeapMemorySegmentWriteOutMedium();
     ColumnarFloatsSerializer serializer = CompressionFactory.getFloatSerializer(
         "test",
-        new OffHeapMemorySegmentWriteOutMedium(),
+        segmentWriteOutMedium,
         "test",
         order,
-        compressionStrategy
+        compressionStrategy,
+        segmentWriteOutMedium.getCloser()
     );
     serializer.open();
 
@@ -253,7 +256,7 @@ public class CompressedFloatsSerdeTest
       final ColumnarFloats indexed, final float[] vals
   ) throws Exception
   {
-    final AtomicReference<String> reason = new AtomicReference<String>("none");
+    final AtomicReference<String> reason = new AtomicReference<>("none");
 
     final int numRuns = 1000;
     final CountDownLatch startLatch = new CountDownLatch(1);

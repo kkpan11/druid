@@ -28,7 +28,7 @@
 | ⚙️ CodeQL Config                      | [![codeql-config](https://img.shields.io/github/actions/workflow/status/apache/druid/codeql-config.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/codeql-config.yml) |
 | 🔍 CodeQL                             | [![codeql](https://img.shields.io/github/actions/workflow/status/apache/druid/codeql.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/codeql.yml) |
 | 🕒 Cron Job ITS                       | [![cron-job-its](https://img.shields.io/github/actions/workflow/status/apache/druid/cron-job-its.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/cron-job-its.yml) |
-| 🏷️ Labeler                            | [![labeler](https://img.shields.io/github/actions/workflow/status/apache/druid/labeler.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/labeler.yml) |
+| 🏷️ Labeler                            | [![labeler](https://img.shields.io/github/actions/workflow/status/apache/druid/labeler.yml?logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/labeler.yml) |
 | ♻️ Reusable Revised ITS               | [![reusable-revised-its](https://img.shields.io/github/actions/workflow/status/apache/druid/reusable-revised-its.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/reusable-revised-its.yml) |
 | ♻️ Reusable Standard ITS              | [![reusable-standard-its](https://img.shields.io/github/actions/workflow/status/apache/druid/reusable-standard-its.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/reusable-standard-its.yml) |
 | ♻️ Reusable Unit Tests                | [![reusable-unit-tests](https://img.shields.io/github/actions/workflow/status/apache/druid/reusable-unit-tests.yml?branch=master&logo=github-actions&style=flat-square)](https://github.com/apache/druid/actions/workflows/reusable-unit-tests.yml) |
@@ -106,7 +106,7 @@ Find articles written by community members and a calendar of upcoming events on 
 
 ### Building from source
 
-Please note that JDK 8 or JDK 11 is required to build Druid.
+Please note that JDK 11 or JDK 17 is required to build Druid.
 
 See the latest [build guide](https://druid.apache.org/docs/latest/development/build.html) for instructions on building Apache Druid from source.
 

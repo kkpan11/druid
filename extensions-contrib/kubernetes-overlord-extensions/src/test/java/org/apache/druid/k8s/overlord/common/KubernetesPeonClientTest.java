@@ -30,6 +30,7 @@ import io.fabric8.kubernetes.client.KubernetesClientTimeoutException;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
+import org.apache.druid.error.DruidException;
 import org.apache.druid.indexing.common.task.NoopTask;
 import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.metrics.StubServiceEmitter;
@@ -94,7 +95,7 @@ public class KubernetesPeonClientTest
   }
 
   @Test
-  void test_launchPeonJobAndWaitForStart_withDisappearingPod_throwsKubernetesClientTimeoutException()
+  void test_launchPeonJobAndWaitForStart_withDisappearingPod_throwIllegalStateExceptionn()
   {
     Job job = new JobBuilder()
         .withNewMetadata()
@@ -115,11 +116,38 @@ public class KubernetesPeonClientTest
         ).once();
 
     Assertions.assertThrows(
-        KubernetesClientTimeoutException.class,
+        IllegalStateException.class,
         () -> instance.launchPeonJobAndWaitForStart(job, NoopTask.create(), 1, TimeUnit.SECONDS)
     );
   }
 
+  @Test
+  void test_launchPeonJobAndWaitForStart_withPendingPod_throwIllegalStateExceptionn()
+  {
+    Job job = new JobBuilder()
+        .withNewMetadata()
+        .withName(KUBERNETES_JOB_NAME)
+        .endMetadata()
+        .build();
+
+    Pod pod = new PodBuilder()
+        .withNewMetadata()
+        .withName(POD_NAME)
+        .addToLabels("job-name", KUBERNETES_JOB_NAME)
+        .endMetadata()
+        .withNewStatus()
+        .withPodIP(null)
+        .endStatus()
+        .build();
+
+    client.pods().inNamespace(NAMESPACE).resource(pod).create();
+
+    Assertions.assertThrows(
+        KubernetesClientTimeoutException.class,
+        () -> instance.launchPeonJobAndWaitForStart(job, NoopTask.create(), 1, TimeUnit.SECONDS)
+    );
+  }
+  
   @Test
   void test_waitForPeonJobCompletion_withSuccessfulJob_returnsJobResponseWithJobAndSucceededPeonPhase()
   {
@@ -498,7 +526,7 @@ public class KubernetesPeonClientTest
   void test_getPeonPodWithRetries_withoutPod_raisesKubernetesResourceNotFoundException()
   {
     Assertions.assertThrows(
-        KubernetesResourceNotFoundException.class,
+        DruidException.class,
         () -> instance.getPeonPodWithRetries(clientApi.getClient(), new K8sTaskId(ID).getK8sJobName(), 1, 1),
         StringUtils.format("K8s pod with label: job-name=%s not found", ID)
     );
